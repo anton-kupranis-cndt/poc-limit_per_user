@@ -48,8 +48,7 @@ def task_id_limiter(func):
             with key_release(key):
                 return func(self, *args, **kwargs)
         else:
-            self._release_key(key)
-            self.retry(countdown=RETRY_SEC)
+            dummy_task.apply_async(args=args, countdown=RETRY_SEC)
     return inner
 
 
