@@ -37,7 +37,7 @@ def key_release(key):
 
 def task_id_limiter(func):
     @wraps(func)
-    def inner(self, *args, **kwargs):
+    def inner(*args, **kwargs):
         key = args[0]
         global _LUA_SHA
         if _LUA_SHA is None:
@@ -46,7 +46,7 @@ def task_id_limiter(func):
         check_key = _LUA_SHA(keys=[key], args=[KEY_LIMIT, 60])
         if check_key:
             with key_release(key):
-                return func(self, *args, **kwargs)
+                return func(*args, **kwargs)
         else:
             dummy_task.apply_async(args=args, countdown=RETRY_SEC)
     return inner
