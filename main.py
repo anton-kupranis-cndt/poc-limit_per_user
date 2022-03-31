@@ -25,6 +25,16 @@ _LUA_SCRIPT = '''
     end
     return 0   
 '''
+_LUA_SCRIPT_ = '''
+    local e = redis.call('GET', KEYS[1])
+    if not e or e < 1 then
+        redis.call('SET', KEYS[1], 0, 'EX', ARGV[2])
+        return 0
+    else
+        redis.call('SET', KEYS[1], e - 1, 'EX', ARGV[2])
+        return e
+    end
+'''
 
 
 @contextmanager
@@ -32,6 +42,11 @@ def key_release(key):
     try:
         yield
     finally:
+        global _LUA_SHA
+        if _LUA_SHA is None:
+            _LUA_SHA = redis_client.register_script(_LUA_SCRIPT_)
+
+        r = _LUA_SHA(keys=[key], args=[KEY_LIMIT, 60])
         redis_client.decr(key, 1)
 
 
